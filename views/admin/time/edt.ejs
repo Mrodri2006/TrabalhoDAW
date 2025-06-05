@@ -20,11 +20,13 @@
 
         
             <label for="datafundacao"><i class="fas fa-landmark"></i>Data da fundação:</label>
-            <input type="text" id="datafundacao" name="datafundacao" value="<%=Time.datafundacao%>" required placeholder="Digite a data da fundação">
+            <input type="date" id="datafundacao" name="datafundacao" value="<%=Time.datafundacao%>" required placeholder="Digite a data da fundação">
             
-            <label for="escudo">Escudo:</label>
-            <img src="/imagem/<%=Time.escudo%>" class="foto"/>
-            <input type="file" id="escudo" name="escudo" >
+         <label for="escudo">Escudo:</label>
+         <img src="/imagem/<%= Time.escudo %>" class="foto" />
+         <input type="file" id="escudo" name="escudo" >
+         <input type="hidden" name="escudoatual" value="<%= Time.escudo %>">
+
 
             <button type="submit" class="btn"><i class="fas fa-save"></i>Efetuar Edição</button>
 

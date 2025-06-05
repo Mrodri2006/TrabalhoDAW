@@ -120,28 +120,32 @@ export async function abreedttime(req, res){
     const resultado = await Time.findById(req.params.id)
     res.render('admin/time/edt',{Time: resultado})
 }
-export async function edttime(req, res){
-    var escudoupload=null
-    if(req.file!=null)
-    {
-        escudoupload=req.file.filename
+export async function edttime(req, res) {
+  try {
+    const updateData = {
+      nome: req.body.nome,
+      estadio: req.body.estadio,
+    };
+
+    if (req.file) {
+      updateData.escudo = req.file.filename;
+    } else if (req.body.escudoatual) {
+      updateData.escudo = req.body.escudoatual;
+    } else {
+      updateData.escudo = null;
     }
-    else if(req.body.escudoatual!="")
-    {
-        escudoupload=req.body.escudoatual
-    }
-    else
-    {
-        escudoupload=null
-    }
-    console.log(escudoupload)   
-    await Time.findByIdAndUpdate(req.params.id, {
-    nome:req.body.nome,
-    estadio:req.body.estadio,
-    escudo:escudoupload
-    })
-    res.redirect('/admin/time/lst')
+
+    // Força retorno do documento atualizado (útil para depurar)
+    const timeAtualizado = await Time.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    console.log('Time atualizado:', timeAtualizado);
+
+    res.redirect('/admin/time/lst');
+  } catch (error) {
+    console.error('Erro ao atualizar time:', error);
+    res.status(500).send('Erro ao atualizar time');
+  }
 }
+
 
 export async function abreaddjogador(req, res) {
     const resultado = await Time.find({}).catch(function(err){console.log(err)})
@@ -162,22 +166,26 @@ export async function addjogador(req, res) {
     {
         fotoupload=null
     }
-    await Jogador.create({
-        nome:req.body.nome,
-        camisa:req.body.camisa,
-        time:jtime,
-        posicao:req.body.posicao
-    })
+await Jogador.create({
+    nome: req.body.nome,
+    camisa: req.body.camisa,
+    time: jtime,
+    posicao: req.body.posicao,
+    foto: fotoupload, // <<< aqui
+})
+
     res.redirect('/admin/jogador/add')
 }
 export async function listarjogador(req, res) {
-    const resultado = await Jogador.find({}).populate('time').catch(function(err){console.log(err)});
-    res.render('admin/jogador/lst',{Jogados: resultado});
+    const resultado = await Jogador.find({}).populate('time').catch(err => console.log(err));
+    res.render('admin/jogador/lst', { jogadores: resultado });
 }
+
 export async function filtrarjogador(req, res) {
-    const resposta = await Jogador.find({nome: new RegExp(req.body.pesquisar,"i")})
-    res.render('admin/jogador/lst',{Jogados: resposta});
+    const resposta = await Jogador.find({ nome: new RegExp(req.body.pesquisar, "i") }).populate('time');
+    res.render('admin/jogador/lst', { jogadores: resposta });
 }
+
 
 export async function deletajogador(req, res) {
     await Jogador.findByIdAndDelete(req.params.id)
@@ -205,10 +213,42 @@ export async function abreedtjogador(req, res) {
     }
 }
 
-export async function edtjogador(req, res){
-    await Jogador.findByIdAndUpdate(req.params.id, req.body)
-    res.redirect('/admin/jogador/lst')
+export async function edtjogador(req, res) {
+  try {
+    const jogador = await Jogador.findById(req.params.id);
+
+    if (!jogador) {
+      return res.status(404).send("Jogador não encontrado");
+    }
+
+    // Atualiza os campos básicos
+    jogador.nome = req.body.nome || jogador.nome;
+    jogador.camisa = req.body.camisa || jogador.camisa;
+    jogador.posicao = req.body.posicao || jogador.posicao;
+
+    // Se o time foi enviado, atualiza (senão mantém)
+    if (req.body.time) {
+      jogador.time = req.body.time;
+    }
+
+    // Se enviou uma nova foto, atualiza
+    if (req.file) {
+      jogador.foto = req.file.filename;
+    } else if (req.body.fotoatual) {
+      // Mantém a foto atual, se não enviou nova
+      jogador.foto = req.body.fotoatual;
+    }
+
+    await jogador.save();
+
+    res.redirect('/admin/jogador/lst');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao atualizar jogador");
+  }
 }
+
+
 
 
 export async function abreaddpartida(req, res) {

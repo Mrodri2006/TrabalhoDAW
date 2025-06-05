@@ -1,6 +1,7 @@
 import express from 'express'
 const app = express();
 
+app.use('/imagem', express.static('public/imagem'));
 app.use(express.urlencoded({extended:true}))
 app.set('view engine', 'ejs')
 
